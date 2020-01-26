@@ -1,4 +1,4 @@
-package Lambda;
+package lambda;
 
 public interface Add {
 	

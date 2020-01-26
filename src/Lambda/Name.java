@@ -1,4 +1,4 @@
-package Lambda;
+package lambda;
 
 // functional interface, only one method
 // this annotation is optional
