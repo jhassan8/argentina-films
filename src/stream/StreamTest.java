@@ -3,8 +3,12 @@ package stream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.DoubleSummaryStatistics;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class StreamTest {
 
@@ -41,6 +45,15 @@ public class StreamTest {
 		minAndMax();
 		distinct();
 		allMatchAnyMatchAndNoneMatch();
+		sumAverageAndRange();
+		reduce();
+		joining();
+		toSet();
+		summarizingDouble();
+		partitioningBy();
+		groupingBy();
+		mapping();
+		parallelStream();
 	}
 
 	// 1_ forEach
@@ -147,15 +160,134 @@ public class StreamTest {
 	public static void allMatchAnyMatchAndNoneMatch() {
 		System.out.println("----------- allMatch, anyMatch and noneMatch");
 		List<Integer> numbers = Arrays.asList(100, 300, 400, 500, 700);
-		
+
 		boolean allMatch = numbers.stream().allMatch(e -> e > 300);
 		System.out.println(allMatch);
-		
+
 		boolean anyMatch = numbers.stream().anyMatch(e -> e > 300);
 		System.out.println(anyMatch);
-		
+
 		boolean noneMatch = numbers.stream().noneMatch(e -> e < 100);
 		System.out.println(noneMatch);
+	}
+
+	// 13_ sum, average and range
+	public static void sumAverageAndRange() {
+		System.out.println("----------- sum, average and range");
+		setUsers();
+
+		double result = users.stream().mapToInt(User::getId).average().orElse(0);
+		System.out.println(result);
+
+		result = users.stream().mapToInt(User::getId).sum();
+		System.out.println(result);
+
+		System.out.println(IntStream.range(5, 10).sum());
+	}
+
+	// 14_ reduce
+	public static void reduce() {
+		System.out.println("----------- reduce");
+		setUsers();
+
+		int sum = users.stream().mapToInt(User::getId).reduce(0, Integer::sum);
+		System.out.println(sum);
+	}
+
+	// 15_ joining
+	public static void joining() {
+		System.out.println("----------- joining");
+		setUsers();
+
+		String names = users.stream().map(User::getName).collect(Collectors.joining(", ")).toString();
+		System.out.println(names);
+	}
+
+	// 16_ toSet
+	public static void toSet() {
+		System.out.println("----------- toSet");
+		setUsers();
+
+		Set<String> setNames = users.stream().map(User::getName).collect(Collectors.toSet());
+		setNames.forEach(e -> System.out.println(e));
+	}
+
+	// 17_ summarizingDouble
+	public static void summarizingDouble() {
+		System.out.println("----------- summarizingDouble");
+		setUsers();
+
+		DoubleSummaryStatistics statistics = users.stream().collect(Collectors.summarizingDouble(User::getId));
+		System.out.println(statistics.getAverage() + " " + statistics.getMax() + " " + statistics.getMin() + " "
+				+ statistics.getCount() + " " + statistics.getSum());
+
+		DoubleSummaryStatistics statistics1 = users.stream().mapToDouble(User::getId).summaryStatistics();
+		System.out.println(statistics1.getAverage() + " " + statistics1.getMax() + " " + statistics1.getMin() + " "
+				+ statistics1.getCount() + " " + statistics1.getSum());
+	}
+
+	// 18_ partitioningBy
+	public static void partitioningBy() {
+		System.out.println("----------- partitioningBy");
+
+		List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+		Map<Boolean, List<Integer>> greaterThanFive = numbers.stream().collect(Collectors.partitioningBy(e -> e > 5));
+
+		greaterThanFive.get(true).forEach(e -> System.out.println(e));
+		greaterThanFive.get(false).forEach(e -> System.out.println(e));
+	}
+
+	// 19_ groupingBy
+	public static void groupingBy() {
+		System.out.println("----------- groupingBy");
+		List<String> names = Arrays.asList("Jose", "Adrian", "Pablo", "Pedro", "Alejandro", "Jhon", "Paraguayo");
+
+		Map<Character, List<String>> alphabethic = names.stream()
+				.collect(Collectors.groupingBy(e -> new Character(e.charAt(0))));
+
+		alphabethic.get('A').forEach(e -> System.out.println(e));
+		alphabethic.get('J').forEach(e -> System.out.println(e));
+		alphabethic.get('P').forEach(e -> System.out.println(e));
+	}
+
+	// 20_ mapping
+	public static void mapping() {
+		System.out.println("----------- mapping");
+		setUsers();
+
+		List<String> persons = users.stream().collect(Collectors.mapping(User::getName, Collectors.toList()));
+		persons.forEach(e -> System.out.println(e));
+	}
+
+	// 21_ parallelStream
+	private static String toUpperCaseSleep(String name) {
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return name.toUpperCase();
+	}
+
+	public static void parallelStream() {
+		System.out.println("----------- parallelStream");
+		setUsers();
+
+		long startTime = System.currentTimeMillis();
+		users.stream().forEach(e -> toUpperCaseSleep(e.getName()));
+		long endTime = System.currentTimeMillis();
+		System.out.println("forEeach " + (endTime - startTime));
+
+		startTime = System.currentTimeMillis();
+		users.forEach(e -> toUpperCaseSleep(e.getName()));
+		endTime = System.currentTimeMillis();
+		System.out.println("stream forEeach " + (endTime - startTime));
+
+		startTime = System.currentTimeMillis();
+		users.parallelStream().forEach(e -> toUpperCaseSleep(e.getName()));
+		endTime = System.currentTimeMillis();
+		System.out.println("parallelStream forEeach " + (endTime - startTime));
+
 	}
 
 }
